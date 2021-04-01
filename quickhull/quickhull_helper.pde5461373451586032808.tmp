@@ -1,0 +1,172 @@
+import java.util.*;
+
+class QuickhullHelper {
+  
+  public QuickhullHelper() {
+  }
+  
+  public void shufflePoints(ArrayList<Point> points, int minX, int maxX, int minY, int maxY) {
+    if(points == null || points.size() == 0)
+      return;
+    
+    for(int i=0; i < points.size(); ++i) {
+      points.get(i).setPosition(random(minX, maxX), random(minY, maxY));
+    }
+  }
+  
+  public ArrayList<Point> createRandomPoints(int maxPoints, int minX, int maxX, int minY, int maxY) {
+    ArrayList<Point> points= new ArrayList<Point>(MAX_POINTS);
+    for(int i=0; i < maxPoints; ++i) {
+      points.add(new Point(random(minX, maxX), random(minY, maxY), 4, #cccccc));
+    }
+    return points;
+  }
+  
+  public int getPointAt(ArrayList<Point> points, float x, float y) {
+    
+    if(points == null || points.size() == 0)
+      return -1;
+    
+    for(int i=0; i < points.size(); ++i) {
+      if(points.get(i).isWithinBoundary(x,y,20))
+        return i;
+    }
+    
+    return -1;
+  }
+  
+  public ArrayList<Point> solveConvexHull(ArrayList<Point> points) {
+    
+    if(points == null || points.size() == 0)
+      return null;
+    
+    points.sort(new Comparator<Point>() {
+      public int compare(Point p1, Point p2) {
+        if(p1.getX() < p2.getX())
+          return -1;
+         
+        if(p1.getX() == p2.getX())
+          return 0;
+        return 1;
+      }
+    });
+    
+    Point leftMost= points.get(0);
+    Point rightMost= points.get(points.size()-1);
+    ArrayList<QuickhullStackItem> stack=  new ArrayList<QuickhullStackItem>((int)Math.ceil(points.size() * 0.5));
+    ArrayList<Point> result= new ArrayList<Point>(points.size());
+    Line mainEdge= new Line(leftMost, rightMost);
+    
+    result.add(leftMost);
+    result.add(rightMost);
+    stack.add(new QuickhullStackItem(mainEdge, true));
+    stack.add(new QuickhullStackItem(mainEdge, false));
+    
+    ArrayList<Point> upperHull= getPointsAboveLine(mainEdge, points);
+    ArrayList<Point> lowerHull= getPointsBelowLine(mainEdge, points);
+    
+    while(!stack.isEmpty()) {
+      int lastIndexStack= stack.size()-1;
+      QuickhullStackItem item= stack.get(lastIndexStack);
+      ArrayList<Point> pointsSet= item.atUpperHull ? upperHull : lowerHull;
+      
+      stack.remove(lastIndexStack); // Pop and process edge from stack...
+      
+      if(pointsSet.isEmpty())
+        continue;
+      
+      Point newExtremePoint= farthestPoint(item.edge, pointsSet);
+      
+      Triangle triang= new Triangle(item.edge.p1, item.edge.p2, newExtremePoint);
+      for(int i=0; i < pointsSet.size(); ++i) {
+        if(triang.intersects(pointsSet.get(i)))
+          pointsSet.remove(i); // not an extreme point...
+      }
+    }
+    /*
+    for(int i=0; i < upperHull.size(); ++i) {
+      upperHull.get(i).setColor(#cc0000);
+    }
+    
+    for(int i=0; i < lowerHull.size(); ++i) {
+      lowerHull.get(i).setColor(#0000cc);
+    }
+    */
+
+    return result;
+  }
+  
+  public ArrayList<Point> getPointsAboveLine(Line edge, ArrayList<Point> points) {
+    
+    ArrayList<Point> result= new ArrayList<Point>();
+    
+    for(int i=0; i < points.size(); ++i) {
+      
+      PVector v2= edge.p1.createVector(points.get(i));
+      
+      if(v2.cross(edge.directionVector).z <= 0)
+        result.add(points.get(i));
+    }
+    
+    return result;
+  }
+  
+  public ArrayList<Point> getPointsBelowLine(Line edge, ArrayList<Point> points) {
+    
+    ArrayList<Point> result= new ArrayList<Point>();
+    
+    for(int i=0; i < points.size(); ++i) {
+      
+      PVector v2= edge.p1.createVector(points.get(i));
+      
+      if(v2.cross(edge.directionVector).z > 0)
+        result.add(points.get(i));
+    }
+    
+    return result;
+  }
+  
+  Point farthestPoint(Line edge, ArrayList<Point> points) {
+    
+    Point result= null;
+    float farthest=-1;
+    for(int i=0; i < points.size(); ++i) {
+      float distLineToPoint= edge.shortestDistanceSqTo(points.get(i));
+      if(farthest < distLineToPoint) {
+        farthest= distLineToPoint;
+        result= points.get(i);
+      }
+    }
+    
+    return result;
+  }
+  
+  public void drawPolygon(ArrayList<Point> points, color c, int lineThickness) {
+    
+    if(points == null || points.size() <= 1)
+      return;
+    
+    points.sort(new Comparator<Point>() {
+      public int compare(Point p1, Point p2) {
+        if(p1.getX() < p2.getX())
+          return -1;
+         
+        if(p1.getX() == p2.getX())
+          return 0;
+        return 1;
+      }
+    });
+    
+    for(int i=0; i < points.size(); i+=2) {
+      noFill();
+      stroke(c);
+      strokeWeight(lineThickness);
+      
+      Point p1= points.get(i);
+      Point p2= (i+1 == points.size()) ? points.get(0) : points.get(i+1);
+      
+      line(p1.getX(), p1.getY(),
+           p2.getX(), p2.getY());
+    }
+  }
+}

@@ -1,0 +1,40 @@
+class QTriangle {
+  public Point p1;
+  public Point p2;
+  public Point p3;
+  public color drawingColor;
+  
+  public QTriangle(Point a, Point b, Point c, color co) throws Exception {
+    this.p1= a;
+    this.p2= b;
+    this.p3= c;
+    this.drawingColor= co;
+    
+    if(this.p1 == this.p2 || this.p1 == this.p3 || this.p2 == this.p3)
+      throw new Exception("Invalid triangle!");
+  }
+  
+  // P= p1 + w1 * (p2-p1) + w2 * (p3-p1)
+  // if w1 and w2 have values between 0 and 1 then P is inside triangle
+  public boolean intersects(Point p) {
+    float diff_p3p1y= p3.y - p1.y;
+    float diff_p2p1y= p2.y - p1.y;
+    float diff_p3p1x= p3.x - p1.x;
+    
+    
+    float w1= (p1.x *  diff_p3p1y + (p.y - p1.y)*diff_p3p1x - p.x * diff_p3p1y) / (diff_p2p1y*diff_p3p1x - (p2.x-p1.x)*diff_p3p1y);
+    float w2= (p.y - p1.y - w1*diff_p2p1y) / diff_p3p1y;
+    
+    return w1 >= 0 && w1 <= 1 &&
+           w2 >= 0 && w2 <= 1;
+  }
+  
+  public void draw() {
+    noFill();
+    strokeWeight(2);
+    stroke(this.drawingColor);
+    triangle(p1.x, p1.y,
+             p2.x, p2.y,
+             p3.x, p3.y);
+  }
+}

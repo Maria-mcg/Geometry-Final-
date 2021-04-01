@@ -1,0 +1,81 @@
+int SCREEN_WIDTH= 800;
+int SCREEN_HEIGHT= 600;
+int SCREEN_MARGIN= 50;
+int MAX_POINTS= 80;
+PFont fontArialBold12= null;
+ArrayList<Point> points= null;
+Triangle triang= null;
+Line someLine= null;
+int pointIndexDragg= -1;
+QuickhullHelper quickhullHelper= new QuickhullHelper();
+
+
+void settings() {
+  size(SCREEN_WIDTH, SCREEN_HEIGHT);
+}
+
+void setup() {
+  
+  background(0);
+  points= quickhullHelper.createRandomPoints(MAX_POINTS, SCREEN_MARGIN, SCREEN_WIDTH-SCREEN_MARGIN, SCREEN_MARGIN, SCREEN_HEIGHT-SCREEN_MARGIN);
+  
+  triang= new Triangle(new Point(SCREEN_MARGIN, SCREEN_HEIGHT-SCREEN_MARGIN),
+                        new Point(SCREEN_WIDTH-SCREEN_MARGIN, SCREEN_HEIGHT-SCREEN_MARGIN),
+                        new Point(random(SCREEN_MARGIN, SCREEN_WIDTH-SCREEN_MARGIN), SCREEN_MARGIN),
+                        #cc0000);
+  
+  someLine= new Line(new Point(200,200), new Point(600,600));
+  fontArialBold12= createFont("Arial Bold", 12);
+}
+
+void draw() {
+  
+  background(0);
+  for(int i=0; i < MAX_POINTS; ++i) {
+    if(pointIndexDragg == i)
+      points.get(i).setPosition(mouseX,mouseY);
+    
+    /*if(triang.intersects(points[i]))
+      points[i].setColor(#00cc00);
+    else
+      points[i].setColor(#cccccc);
+      */
+    
+    points.get(i).draw();
+  }
+  
+  ArrayList<Point> solution= quickhullHelper.solveConvexHull(points);
+  quickhullHelper.drawPolygon(solution, #cc0000, 2);
+  
+  // triang.draw();
+  
+  // someLine.draw();
+  // float dist= someLine.shortestDistanceSqTo(points[0]);
+  // System.out.println("dist:" + dist);
+  
+  drawFrameRate();
+}
+
+void drawFrameRate() {
+  textFont(fontArialBold12);
+  fill(#cccccc);
+  text(frameRate,20,20);
+}
+
+void keyPressed() {
+  switch(key) {
+    case 'r':
+    case 'R':
+      background(0);
+      quickhullHelper.shufflePoints(points, SCREEN_MARGIN, SCREEN_WIDTH-SCREEN_MARGIN, SCREEN_MARGIN, SCREEN_HEIGHT-SCREEN_MARGIN);
+    break;
+  }
+}
+
+void mousePressed() {
+  pointIndexDragg= quickhullHelper.getPointAt(points, mouseX, mouseY);
+}
+
+void mouseReleased() {
+  pointIndexDragg= -1;
+}

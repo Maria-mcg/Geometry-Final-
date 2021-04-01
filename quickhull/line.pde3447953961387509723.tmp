@@ -1,0 +1,27 @@
+class Line {
+  private Point p1;
+  private Point p2;
+  private PVector directionVector;
+  private color drawingColor;
+  
+  public Line(Point p1, Point p2) {
+    this.p1= p1;
+    this.p2= p2;
+    Point q= this.p2.Subtract(this.p1);
+    this.directionVector= new PVector(q.GetX(), q.GetY());
+    this.drawingColor= #cccccc;
+  }
+  
+  // dist= |APxu| / |u|, where u is the direction vector and AP is the vector from one point of the line to P
+  public float ShortestDistanceTo(Point p) {
+    Point APSub= this.p1.Subtract(p);
+    PVector AP= new PVector(APSub.GetX(), APSub.GetY());
+    
+  }
+  
+  public void draw() {
+    stroke(this.drawingColor);
+    line(this.p1.GetX(), this.p1.GetY(),
+         this.p2.GetX(), this.p2.GetY());
+  }
+}
